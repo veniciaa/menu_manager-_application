@@ -20,26 +20,32 @@ export default function App() {
   const [menuList, setMenuList] = useState([
     //Dish 1
     { 
-      id: 1,
-      dish: 'Salad',
-      course: 'Starter',
-      price: '60'
+      id: 'd1', //id is used to identify each dish 
+      dish: 'Salad', // Name of the dish
+      description: 'Fresh garden salad with a light vinaigrette dressing.', // Description of the dish
+      course: 'Starter Course', // Course the dish is in (Starter, Main, Dessert)
+      price: '60', // Price of the dish
+      image: require('./assets/salad.jpg') // Image of the dish if one is taken
     },
 
     //Dish 2
     { 
-      id: 2,
-      dish: 'Steak and Mash',
-      course: 'Main Course',
-      price: '200' 
+      id: 'd2',
+      dish: 'Steak and Mash', 
+      description: 'Juicy steak served with creamy mashed potatoes.',
+      course: 'Main Course', 
+      price: '200', 
+      image: require('./assets/steak.jpg') 
     },
 
     //Dish 3
     { 
-      id: 3,
-      dish: 'Tiramisu',
-      course: 'Dessert',
-      price: '80' 
+      id: 'd3',
+      dish: 'Tiramisu', 
+      description: 'Classic dessert made with layers of coffee-soaked ladyfingers and cream.',
+      course: 'Dessert Course', 
+      price: '80', 
+      image: require('./assets/dessert.png') 
     }
   ]);
 

@@ -1,39 +1,94 @@
-import React, { useState, useContext } from 'react';
-import { StyleSheet, Text, View, TextInput, Image, Button, FlatList, Alert, Platform } from 'react-native';
+import React, { useState, useContext, useEffect } from 'react'; //useEffect Allows us to load exsisteing items to form
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  TextInput, 
+  Image,
+  Button, 
+  FlatList, 
+  Alert,
+  Platform 
+} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MenuContext } from './App';
 
-export default function AddToMenuScreen({ navigation }) {
+export default function AddToMenuScreen({ navigation, route }) { //route is to allow screen to get the dish we seclet to edit 
   const [dish, setDish] = useState('');
   const [description, setDescription] = useState('');
   const [course, setCourse] = useState('courses');
   const [price, setPrice] = useState('');
   const { menuList, setMenuList } = useContext(MenuContext);
 
-  // Add new menu item 
+  //Checks if we are editing an exsisting dish
+  const itemToEdit = route.params?.itemToEdit;
+
+  //Shows exsisting dish's details when user is editing
+  useEffect(() => {
+    if (itemToEdit) {
+      setDish(itemToEdit.dish);
+      setDescription(itemToEdit.description || '');
+      setCourse(itemToEdit.course);
+      setPrice(itemToEdit.price);
+    }
+  }, [itemToEdit]);
+
+  // Add new menu item  or edit exsisting menu item
   const handleAddItem = () => {
+
+    //checks if required fields are empty
     if (!dish.trim() || !price.trim() || course === 'courses') {
       Alert.alert("Error", "Please complete all required fields.");
       return;
     }
     
-    // Construct the item to perfectly match what MenuScreen expects
+    //Checks if user is editing and exsisting dish
+    if (itemToEdit) {
+
+      const updatedItem = {
+        ...itemToEdit,
+        dish: dish.trim(),
+        description: description.trim(),
+        course: course,
+        price: price.trim()
+      }
+
+      //edit the exsisting dish in the menuList state variable
+      setMenuList((currentItems) => 
+        currentItems.map((item) => 
+          item.id === itemToEdit.id ? updatedItem : item)
+      );
+
+      //To show menu item was successfiully edited and return to the MenuScreen
+      Alert.alert('Successful', `${dish} updated in Menu!`, [
+        { 
+          text: 'OK', 
+          onPress: () => navigation.navigate('Menu') 
+        }
+      ]);
+
+    } else {
+
+      //Adding new dish item to the menuList 
     const newItem = {
       id: Date.now().toString(),
       dish: dish.trim(),
       description: description.trim(),
-      course: course, // This will now pass "Starter Course", "Main Course", or "Dessert Course" exactly
+      course: course, 
       price: price.trim(),
       image: null
     };
 
-    // Update the global state context
+    // add item to the menuList
     setMenuList([...menuList, newItem]);
     
     Alert.alert("Success", `${dish} added to Menu!`, [
       { text: "OK", onPress: () => navigation.navigate('Menu') }
     ]);
+
+  }
     
+  //clear all the fields after adding or editing a dish
     handleClear();
   };
 
@@ -45,11 +100,12 @@ export default function AddToMenuScreen({ navigation }) {
     setPrice('');
   };
 
+
   return (
     <View style={styles.container}>
       <FlatList
         data={menuList}
-        keyExtractor={(item) => item.id || Math.random().toString()}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
@@ -60,7 +116,7 @@ export default function AddToMenuScreen({ navigation }) {
               <Image source={require('./assets/logo.png')} style={styles.logo} />
             </View>
             
-            <Text style={styles.heading}>Add To Menu</Text>
+            <Text style={styles.heading}>{itemToEdit ? 'Edit Menu Item' : 'Add To Menu'}</Text>
 
             {/* Dish */}
             <Text style={styles.label}>Dish Name *</Text>
@@ -91,7 +147,7 @@ export default function AddToMenuScreen({ navigation }) {
                 onValueChange={(itemValue) => setCourse(itemValue)}
               >
                 <Picker.Item label="Select course" value="courses" />
-                {/* Fixed: Explicitly set values to match the exact string format in MenuScreen */}
+                
                 <Picker.Item label="Starter" value="Starter Course" />
                 <Picker.Item label="Main" value="Main Course" />
                 <Picker.Item label="Dessert" value="Dessert Course" />
@@ -111,17 +167,32 @@ export default function AddToMenuScreen({ navigation }) {
 
             {/* Buttons */}
             <View style={styles.buttonRow}>
+              
               <View style={styles.button}>
-                <Button title="Clear" color="black" onPress={handleClear} />
+                <Button
+                 title="Clear" 
+                 color="black" 
+                 onPress={handleClear} 
+                 />
               </View>
+
               <View style={styles.button}>
-                <Button title="Add Item" color="black" onPress={handleAddItem} />
+                <Button
+                 title={itemToEdit ? 'Save Changes' : 'Add Item'} //this allows button to change text depending on if user is adding or editing a dish
+                 color="black" 
+                 onPress={handleAddItem} 
+                 />
               </View>
+
             </View>
 
             {/* Back button */}
             <View style={styles.backButton}>
-              <Button title="Back" color="black" onPress={() => navigation.goBack()} />
+              <Button
+               title="Back" 
+               color="black" 
+               onPress={() => navigation.goBack()} 
+               />
             </View>
 
             {menuList && menuList.length > 0 && (
