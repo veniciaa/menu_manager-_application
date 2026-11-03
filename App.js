@@ -16,7 +16,32 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   // Global state variables pass directly down into our application context tree
-  const [menuList, setMenuList] = useState([]);
+  //Adding in the 3 dishes pre-set in the menuList state variable to be used in the MenuScreen and AddToMenuScreen components
+  const [menuList, setMenuList] = useState([
+    //Dish 1
+    { 
+      id: 1,
+      dish: 'Salad',
+      course: 'Starter',
+      price: '60'
+    },
+
+    //Dish 2
+    { 
+      id: 2,
+      dish: 'Steak and Mash',
+      course: 'Main Course',
+      price: '200' 
+    },
+
+    //Dish 3
+    { 
+      id: 3,
+      dish: 'Tiramisu',
+      course: 'Dessert',
+      price: '80' 
+    }
+  ]);
 
   return (
     <MenuContext.Provider value={{ menuList, setMenuList }}>
