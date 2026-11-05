@@ -80,7 +80,9 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
     };
 
     // add item to the menuList
-    setMenuList([...menuList, newItem]);
+    setMenuList([...menuList, newItem]); //using ... which is a spread operator and it is passing through the route parameters to the newItem object, which is then added to the menuList state variable.
+
+    //To show menu item was successfiully added and return to the MenuScreen
     
     Alert.alert("Success", `${dish} added to Menu!`, [
       { text: "OK", onPress: () => navigation.navigate('Menu') }
@@ -105,7 +107,7 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
     <View style={styles.container}>
       <FlatList
         data={menuList}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id.toString()} //changed to this line of code becuse it goves every item a unique key based on its id, which is important for performance and avoiding warnings in React Native.
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
@@ -204,11 +206,28 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
         }
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{item?.dish || 'Unnamed Dish'}</Text>
+            <Text style={styles.cardTitle}>
+              {item?.dish || 'Unnamed Dish'}
+            </Text>
+
             <Text style={styles.cardSub}>
               {item?.course || 'Unassigned Course'} — R{item?.price || '0.00'}
             </Text>
-            {item?.description ? <Text style={styles.cardDesc}>{item.description}</Text> : null}
+
+            {item?.description ? 
+            <Text style={styles.cardDesc}>
+              {item.description}
+              </Text> : null}
+          
+          
+            <Button //adds edit button for the preview section of the add to menu screen 
+              title="Edit" 
+              color="black" 
+              onPress={() => navigation.navigate('AddToMenu', {
+          itemToEdit: item} )
+              }
+            />
+
           </View>
         )}
       />
