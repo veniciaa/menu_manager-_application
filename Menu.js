@@ -6,51 +6,28 @@ import {
   TextInput, 
   Image, 
   Button,
-  FlatList 
+  FlatList, 
+  Alert
 } from 'react-native';
 
 import { MenuContext } from './App'; 
 
 export default function MenuScreen({ navigation }) {
 
-  const { menuList } = useContext(MenuContext);
+  
+  const { menuList, setMenuList } = useContext(MenuContext);//Get the menu items and update function from the app.js file using the useContext hook to access the MenuContext
 
-  //Allows app to search 
+  //SEARCH
   const [searchQuery, setSearchQuery] = useState('');
 
-  //ITEMS AS DEFAULT FOR THE MENU LIST 
-  const defaultItems = [
-    { 
-      id: 'd1', 
-      dish: 'Salad', // Changed from name to dish to match AddToMenu variables
-      course: 'Starter Course', 
-      price: '60', 
-      image: require('./assets/salad.jpg') 
-    },
-    { 
-      id: 'd2', 
-      dish: 'Steak and Mash', // Changed from name to dish to match AddToMenu variables
-      course: 'Main Course', 
-      price: '200', 
-      image: require('./assets/steak.jpg') 
-    },
-    { 
-      id: 'd3',
-      dish: 'Tiramisu', // Changed from name to dish to match AddToMenu variables
-      course: 'Dessert Course', 
-      price: '80', 
-      image: require('./assets/dessert.png') 
-    }
-  ];
+  //FILTERING
+  const filteredMenu = menuList.filter(item => {// Filters the input and default items
 
-  //ADD THE DEFAULT OLD LIST TO THE NEW INPUTTED LIST
-  const totalMenu = [...defaultItems, ...menuList];
-
-  // THIS IS TO FILTER THE INPUTTED ITEMS AND DEFAULT ITEMS BASED ON THE SEARCH 
-  const filteredMenu = totalMenu.filter(item => {
-    // Safely check item properties to prevent crashes if fields are missing
+    // This will safely check item properties to prevent crashes if fields are missing
     const dishName = item.dish ? item.dish.toLowerCase() : '';
+
     const courseName = item.course ? item.course.toLowerCase() : '';
+
     const search = searchQuery.toLowerCase();
 
     return dishName.includes(search) || courseName.includes(search);
