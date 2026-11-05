@@ -39,6 +39,33 @@ export default function MenuScreen({ navigation }) {
     navigation.navigate('AddToMenu', { itemToEdit: item });
   }
 
+  //DELETE 
+  //itemId is used to identify each dish and filter it out of the menuList state variable when the delete button is pressed
+  const deleteItem = (id) => {
+    setMenuList((currentItems) => currentItems.filter((item) => item.id !== id)); 
+  };
+
+  //CONFIRM DELETION
+  const confirmDelete = (item) => {
+    Alert.alert(
+      "Delete Dish",
+      `Are you sure you want to delete ${item.dish}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteItem(item.id),
+        },
+      ]
+    );
+  };
+            
+
   // MAKES EACH card function  
   const renderMenuItem = ({ item }) => (
     <View style={styles.menuItem}>
@@ -53,7 +80,7 @@ export default function MenuScreen({ navigation }) {
 
         {/*BUTTONS*/}
         <View style={styles.buttonContainer}>
-          
+
           {/*EDIT BUTTON*/}
           <View style={styles.button}>
             <Button 
@@ -62,7 +89,14 @@ export default function MenuScreen({ navigation }) {
               onPress={() => handleEdit(item)}
             />
             </View>
-
+          {/*DELETE BUTTON*/}
+          <View style={styles.button}>
+            <Button 
+              title="Delete"
+              color="red" /*Red will be the default button colour users look for when wanting to exit or delet items so using it will make it easier for user to identify */
+              onPress={() => confirmDelete(item)}
+              />
+              </View>
           </View>
       </View>
     </View>
