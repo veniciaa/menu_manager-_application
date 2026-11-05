@@ -59,12 +59,29 @@ export default function MenuScreen({ navigation }) {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteItem(item.id),
+          onPress: () => deleteItem(item.id), //when button is pressed it trigger deletion
         },
       ]
     );
   };
-            
+
+  //AVERAGE
+  const calculateAverage = (selectedCourse) => {
+    const courseItems = menuList.filter((item) => item.course === selectedCourse);
+
+    if (courseItems.length === 0) { //if nothing in the category drop down stored then it will return
+      return 0;
+    }
+
+    const total = courseItems.reduce((sum, item) => sum + item.price, 0); //Adds all the menu items
+    return total / courseItems.length;
+  };
+
+  //FORMAT PRICES - change to south African currency
+  const formatPrice = (amount) => {
+    return `R ${amount.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+  }//the 2 ensures there are only 2 decimal places
+
 
   // MAKES EACH card function  
   const renderMenuItem = ({ item }) => (
@@ -76,7 +93,7 @@ export default function MenuScreen({ navigation }) {
       <View style={styles.menuInfo}>
         <Text style={styles.dish}>{item.dish || 'Unnamed Dish'}</Text>
         <Text style={styles.course}>{item.course || 'Unassigned Course'}</Text>
-        <Text style={styles.price}>R{item.price || '0.00'}</Text> 
+        <Text style={styles.price}>{formatPrice(item.price)}</Text> 
 
         {/*BUTTONS*/}
         <View style={styles.buttonContainer}>
@@ -120,6 +137,18 @@ export default function MenuScreen({ navigation }) {
       {/* Title */}
       <Text style={styles.heading}>Menu ({filteredMenu.length} items)</Text>
 
+      <Text style={styles.heading}>
+        Average Starter Price: {formatPrice(calculateAverage('Starter Course'))}
+      </Text>
+
+      <Text style={styles.heading}>
+        Average Main Price: {formatPrice(calculateAverage('Main Course'))}
+      </Text>
+
+      <Text style={styles.heading}>
+        Average Dessert Price: {formatPrice(calculateAverage('Dessert Course'))}
+        </Text>
+
       {/* Search */}
       <TextInput 
         style={styles.input} 
@@ -159,7 +188,7 @@ export default function MenuScreen({ navigation }) {
           <Button 
             title="Add to Menu" 
             color="black" 
-            onPress={() => navigation.navigate('AddToMenu')} 
+            onPress={() => navigation.navigate('AddToMenu', { itemToEdit: null })} 
           /> 
         </View>
 
