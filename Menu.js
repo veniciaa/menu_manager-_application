@@ -33,6 +33,12 @@ export default function MenuScreen({ navigation }) {
     return dishName.includes(search) || courseName.includes(search);
   });
 
+
+  //EDIT 
+  const handleEdit = (item) => {
+    navigation.navigate('AddToMenu', { itemToEdit: item });
+  }
+
   // MAKES EACH card function  
   const renderMenuItem = ({ item }) => (
     <View style={styles.menuItem}>
@@ -44,6 +50,20 @@ export default function MenuScreen({ navigation }) {
         <Text style={styles.dish}>{item.dish || 'Unnamed Dish'}</Text>
         <Text style={styles.course}>{item.course || 'Unassigned Course'}</Text>
         <Text style={styles.price}>R{item.price || '0.00'}</Text> 
+
+        {/*BUTTONS*/}
+        <View style={styles.buttonContainer}>
+          
+          {/*EDIT BUTTON*/}
+          <View style={styles.button}>
+            <Button 
+              title="Edit"
+              color="black"
+              onPress={() => handleEdit(item)}
+            />
+            </View>
+
+          </View>
       </View>
     </View>
   );
@@ -89,6 +109,8 @@ export default function MenuScreen({ navigation }) {
       />
 
       {/* Buttons */} 
+
+      {/*BACK BUTTON */}
       <View style={styles.buttonContainer}>
         <View style={styles.button}> 
           <Button 
@@ -98,13 +120,15 @@ export default function MenuScreen({ navigation }) {
           />
         </View>
 
-        <View style={styles.button}>
+        {/*ADD BUTTONS */}
+        <View style={styles.button}> 
           <Button 
             title="Add to Menu" 
             color="black" 
             onPress={() => navigation.navigate('AddToMenu')} 
           /> 
         </View>
+
       </View>
 
     </View>
