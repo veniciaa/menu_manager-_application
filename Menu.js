@@ -1,27 +1,45 @@
-import React, { useContext, useState } from 'react'; 
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TextInput, 
-  Image, 
+import React, { useContext, useState } from 'react';
+
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Image,
   Button,
-  FlatList, 
-  Alert
+  FlatList,
+  Alert,
+  TouchableOpacity
 } from 'react-native';
 
-import { MenuContext } from './App'; 
+import { MenuContext } from './App';
+
 
 export default function MenuScreen({ navigation }) {
 
-  
-  const { menuList, setMenuList } = useContext(MenuContext);//Get the menu items and update function from the app.js file using the useContext hook to access the MenuContext
+  const { menuList, setMenuList } = useContext(MenuContext);
 
-  //SEARCH
+  // SEARCH
   const [searchQuery, setSearchQuery] = useState('');
 
-  //FILTERING
-  const filteredMenu = menuList.filter(item => {// Filters the input and default items
+  // FILTERING
+  const [filter, setFilter] = useState('All');
+
+
+  // FILTER ITEMS BY COURSE
+  const filterItems = menuList.filter((items) => {
+
+    if (filter === 'All') {
+      return true;
+    }
+
+    return items.course === filter;
+
+  });
+
+
+  // SEARCH
+  const filteredMenu = filterItems.filter((item) => {
 
     // This will safely check item properties to prevent crashes if fields are missing
     const dishName = item.dish ? item.dish.toLowerCase() : '';
@@ -31,22 +49,64 @@ export default function MenuScreen({ navigation }) {
     const search = searchQuery.toLowerCase();
 
     return dishName.includes(search) || courseName.includes(search);
+
   });
 
 
-  //EDIT 
-  const handleEdit = (item) => {
-    navigation.navigate('AddToMenu', { itemToEdit: item });
-  }
+  // SORT ITEMS (LOWEST TO HIGHEST)
+  const sortedItems = [...filteredMenu].sort(
+    (firstItem, secondItem) =>
+      firstItem.price - secondItem.price
+  );
 
-  //DELETE 
-  //itemId is used to identify each dish and filter it out of the menuList state variable when the delete button is pressed
-  const deleteItem = (id) => {
-    setMenuList((currentItems) => currentItems.filter((item) => item.id !== id)); 
+
+  // ITEM TYPE BUTTON
+  const ItemsTypeButton = ({ title }) => {
+
+    const selected = filter === title;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.itemTypeButton,
+          selected && styles.selectedItemType
+        ]}
+        onPress={() => setFilter(title)}
+      >
+
+        <Text style={[
+          styles.itemTypeText,
+          selected && styles.selectedButtonText
+        ]}>
+          {title === 'All' ? 'All' : title.replace(' Course', '')}
+        </Text>
+
+      </TouchableOpacity>
+    );
+
   };
 
-  //CONFIRM DELETION
+
+  // EDIT
+  const handleEdit = (item) => {
+    navigation.navigate('AddToMenu', { itemToEdit: item });
+  };
+
+
+  // DELETE
+  // itemId is used to identify each dish and filter it out of the menuList state variable when the delete button is pressed
+  const deleteItem = (id) => {
+
+    setMenuList((currentItems) =>
+      currentItems.filter((item) => item.id !== id)
+    );
+
+  };
+
+
+  // CONFIRM DELETION
   const confirmDelete = (item) => {
+
     Alert.alert(
       "Delete Dish",
       `Are you sure you want to delete ${item.dish}?`,
@@ -59,84 +119,142 @@ export default function MenuScreen({ navigation }) {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteItem(item.id), //when button is pressed it trigger deletion
+          onPress: () => deleteItem(item.id),
         },
       ]
     );
+
   };
 
-  //AVERAGE
-  const calculateAverage = (selectedCourse) => {
-    const courseItems = menuList.filter((item) => item.course === selectedCourse);
 
-    if (courseItems.length === 0) { //if nothing in the category drop down stored then it will return
+  // AVERAGE
+  const calculateAverage = (selectedCourse) => {
+
+    const courseItems = menuList.filter(
+      (item) => item.course === selectedCourse
+    );
+
+    if (courseItems.length === 0) {
       return 0;
     }
 
-    const total = courseItems.reduce((sum, item) => sum + item.price, 0); //Adds all the menu items
+    const total = courseItems.reduce(
+      (sum, item) => sum + Number(item.price),
+      0
+    );
+
     return total / courseItems.length;
+
   };
 
-  //FORMAT PRICES - change to south African currency
+
+  // FORMAT PRICES - change to South African currency
   const formatPrice = (amount) => {
-    return `R ${amount.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-  }//the 2 ensures there are only 2 decimal places
+
+    return `R ${Number(amount).toLocaleString('en-ZA', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+
+  };
+
+  //AVERAGE CARD 
+  const AverageCard = ({ title, courseName }) => {
+    return (
+      <View style={styles.averageCard}>
+        <Text style={styles.averageTitle}>{title}</Text>
+        <Text style={styles.averageAmount}>{formatPrice(calculateAverage(courseName))}</Text>
+      </View>
+    );
+  };
 
 
-  // MAKES EACH card function  
+  // MAKES EACH CARD FUNCTION
   const renderMenuItem = ({ item }) => (
-    <View style={styles.menuItem}>
-      <Image 
-        source={typeof item.image === 'number' ? item.image : require('./assets/logo.png')} 
-        style={styles.foodImage} 
-      />
-      <View style={styles.menuInfo}>
-        <Text style={styles.dish}>{item.dish || 'Unnamed Dish'}</Text>
-        <Text style={styles.course}>{item.course || 'Unassigned Course'}</Text>
-        <Text style={styles.price}>{formatPrice(item.price)}</Text> 
 
-        {/*BUTTONS*/}
+    <View style={styles.menuItem}>
+
+      <Image
+        source={
+          typeof item.image === 'number'
+            ? item.image
+            : require('./assets/logo.png')
+        }
+        style={styles.foodImage}
+      />
+
+      <View style={styles.menuInfo}>
+
+        <Text style={styles.dish}>
+          {item.dish || 'Unnamed Dish'}
+        </Text>
+
+        <Text style={styles.course}>
+          {item.course || 'Unassigned Course'}
+        </Text>
+
+        <Text style={styles.price}>
+          {formatPrice(item.price)}
+        </Text>
+
+
+        {/* BUTTONS */}
         <View style={styles.buttonContainer}>
 
-          {/*EDIT BUTTON*/}
+          {/* EDIT BUTTON */}
           <View style={styles.button}>
-            <Button 
+            <Button
               title="Edit"
               color="black"
               onPress={() => handleEdit(item)}
             />
-            </View>
-          {/*DELETE BUTTON*/}
-          <View style={styles.button}>
-            <Button 
-              title="Delete"
-              color="red" /*Red will be the default button colour users look for when wanting to exit or delet items so using it will make it easier for user to identify */
-              onPress={() => confirmDelete(item)}
-              />
-              </View>
           </View>
+
+          {/* DELETE BUTTON */}
+          <View style={styles.button}>
+            <Button
+              title="Delete"
+              color="red"
+              onPress={() => confirmDelete(item)}
+            />
+          </View>
+
+        </View>
+
       </View>
+
     </View>
+
   );
 
+
   return (
+
     <View style={styles.container}>
 
-      {/*Header */}
-      <View style={styles.header}> 
-        <Image 
-          source={require('./assets/profile.png')} 
-          style={styles.profileImage} 
-        /> 
-        <Image 
-          source={require('./assets/logo.png')} 
-          style={styles.logo} 
-        /> 
+      {/* HEADER */}
+      <View style={styles.header}>
+
+        <Image
+          source={require('./assets/profile.png')}
+          style={styles.profileImage}
+        />
+
+        <Image
+          source={require('./assets/logo.png')}
+          style={styles.logo}
+        />
+
       </View>
 
-      {/* Title */}
-      <Text style={styles.heading}>Menu ({filteredMenu.length} items)</Text>
 
+      {/* TITLE */}
+      <Text style={styles.heading}>
+        Menu ({sortedItems.length} items)
+      </Text>
+
+
+      {/* AVERAGE PRICES */}
       <Text style={styles.heading}>
         Average Starter Price: {formatPrice(calculateAverage('Starter Course'))}
       </Text>
@@ -147,21 +265,39 @@ export default function MenuScreen({ navigation }) {
 
       <Text style={styles.heading}>
         Average Dessert Price: {formatPrice(calculateAverage('Dessert Course'))}
-        </Text>
+      </Text>
 
-      {/* Search */}
-      <TextInput 
-        style={styles.input} 
-        placeholder="Search menu..." 
+
+      {/* SEARCH */}
+      <TextInput
+        style={styles.input}
+        placeholder="Search menu..."
         value={searchQuery}
         placeholderTextColor="gray"
-        onChangeText={setSearchQuery} 
+        onChangeText={setSearchQuery}
       />
 
-      {/*FlatList*/}
+
+      {/* COURSE FILTER BUTTONS */}
+      <View style={styles.filterContainer}>
+
+        <ItemsTypeButton title="All" />
+
+        <ItemsTypeButton title="Starter Course" />
+
+        <ItemsTypeButton title="Main Course" />
+
+        <ItemsTypeButton title="Dessert Course" />
+
+      </View>
+
+
+      {/* FLATLIST */}
       <FlatList
-        data={filteredMenu}
-        keyExtractor={(item, index) => item.id ? item.id.toString() : index.toString()}
+        data={sortedItems}
+        keyExtractor={(item, index) =>
+          item.id ? item.id.toString() : index.toString()
+        }
         renderItem={renderMenuItem}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -171,105 +307,157 @@ export default function MenuScreen({ navigation }) {
         }
       />
 
-      {/* Buttons */} 
 
-      {/*BACK BUTTON */}
+      {/* BUTTONS */}
+
+      {/* BACK BUTTON */}
       <View style={styles.buttonContainer}>
-        <View style={styles.button}> 
-          <Button 
-            title="Back" 
+
+        <View style={styles.button}>
+          <Button
+            title="Back"
             color="black"
-            onPress={() => navigation.goBack()} 
+            onPress={() => navigation.goBack()}
           />
         </View>
 
-        {/*ADD BUTTONS */}
-        <View style={styles.button}> 
-          <Button 
-            title="Add to Menu" 
-            color="black" 
-            onPress={() => navigation.navigate('AddToMenu', { itemToEdit: null })} 
-          /> 
+
+        {/* ADD BUTTON */}
+        <View style={styles.button}>
+          <Button
+            title="Add to Menu"
+            color="black"
+            onPress={() => navigation.navigate('AddToMenu', {
+              itemToEdit: null
+            })}
+          />
         </View>
 
       </View>
 
     </View>
+
   );
-}
-   
-const styles = StyleSheet.create({ 
-  container: { 
+
+  }
+
+
+const styles = StyleSheet.create({
+
+  container: {
     flex: 1,
     backgroundColor: '#E9D69E',
-    padding: 20 
-  }, 
-  header: { 
-    flexDirection: 'row', 
+    padding: 20
+  },
+
+  header: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 20
-  }, 
+  },
+
   profileImage: {
     width: 60,
-    height: 60, 
-    resizeMode: 'contain'
-  }, 
-  logo: { 
-    width: 100, 
     height: 60,
-    resizeMode: 'contain' 
+    resizeMode: 'contain'
   },
-  heading: { 
-    fontSize: 28, 
-    fontWeight: 'bold', 
+
+  logo: {
+    width: 100,
+    height: 60,
+    resizeMode: 'contain'
+  },
+
+  heading: {
+    fontSize: 20,
+    fontWeight: 'bold',
     textAlign: 'center',
-    marginVertical: 15, 
-    color: '#333' 
-  }, 
+    marginVertical: 8,
+    color: '#333'
+  },
+
   input: {
     borderWidth: 1,
-    borderColor: 'gray', 
+    borderColor: 'gray',
     backgroundColor: 'white',
-    padding: 10, 
-    marginBottom: 15, 
-    borderRadius: 5, 
-    color: 'black' 
-  }, 
-  menuItem: { 
-    flexDirection: 'row',
-    backgroundColor: 'white', 
-    padding: 10, 
-    marginBottom: 12, 
-    borderRadius: 8, 
-    alignItems: 'center' 
-  }, 
-  foodImage: { 
-    width: 90, 
-    height: 90,
-    resizeMode: 'cover', 
-    borderRadius: 8 
+    padding: 10,
+    marginBottom: 15,
+    borderRadius: 5,
+    color: 'black'
   },
-  menuInfo: { 
+
+  // FILTER BUTTON STYLES
+  filterContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginBottom: 10
+  },
+
+  itemTypeButton: {
+    backgroundColor: 'white',
+    padding: 10,
+    margin: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'gray'
+  },
+
+  selectedItemType: {
+    backgroundColor: 'green',
+    borderColor: 'green'
+  },
+
+  itemTypeText: {
+    color: 'black',
+    fontWeight: 'bold'
+  },
+
+  selectedButtonText: {
+    color: 'white'
+  },
+
+  menuItem: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    padding: 10,
+    marginBottom: 12,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+
+  foodImage: {
+    width: 90,
+    height: 90,
+    resizeMode: 'cover',
+    borderRadius: 8
+  },
+
+  menuInfo: {
     marginLeft: 15,
     flex: 1
-  }, 
-  dish: { 
-    fontSize: 18, 
+  },
+
+  dish: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: 'black',
-    marginBottom: 5 
-  }, 
-  course: { 
-    fontSize: 15, 
-    color: 'black', 
-    marginBottom: 5 
+    marginBottom: 5
   },
-  price: { 
-    fontSize: 16, 
-    fontWeight: 'bold', 
-    color: 'black' 
+
+  course: {
+    fontSize: 15,
+    color: 'black',
+    marginBottom: 5
   },
+
+  price: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'black'
+  },
+
   emptyText: {
     textAlign: 'center',
     color: 'dimgray',
@@ -277,13 +465,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontStyle: 'italic'
   },
-  buttonContainer: { 
-    marginTop: 10 
-  }, 
-  button: { 
-    marginTop: 10 
-  } 
+
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10
+  },
+
+  button: {
+    flex: 1,
+    margin: 5
+  }
+
 });
+
 
 /* REFERENCES
 
@@ -308,4 +503,6 @@ Stack Overflow, 2017. React Native Flatlist default data name. Available at: htt
 
 GeeksforGeeks. 2026. React Native FlatList Component [Blog]. Available: https://www.geeksforgeeks.org/react-native/react-native-flatlist-component/ [Accessed 6 September 2026].
 
-W3Schools. 2026. React useContext Hook [Online]. Available: w3schools.com [Accessed 7 September 2026].*/
+W3Schools. 2026. React useContext Hook [Online]. Available: w3schools.com [Accessed 7 September 2026].
+
+*/
