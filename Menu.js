@@ -7,7 +7,6 @@ import {
   View,
   TextInput,
   Image,
-  Button,
   FlatList,
   Alert,
   TouchableOpacity
@@ -84,10 +83,7 @@ export default function MenuScreen({ navigation }) {
         onPress={() => setFilter(title)}
       >
 
-        <Text style={[
-          styles.itemTypeText,
-          selected && styles.selectedButtonText
-        ]}>
+        <Text style={styles.itemTypeText}>
           {title === 'All' ? 'All' : title.replace(' Course', '')}
         </Text>
 
@@ -106,17 +102,18 @@ export default function MenuScreen({ navigation }) {
   // DELETE
   // itemId is used to identify each dish and filter it out of the menuList state variable when the delete button is pressed
   const deleteItem = (id) => {
-  setMenuList((currentItems) => {
 
-    const updatedItems = currentItems.filter((item) => {
-      return item.id.toString() !== id.toString();
+    setMenuList((currentItems) => {
+
+      const updatedItems = currentItems.filter((item) => {
+        return item.id.toString() !== id.toString();
+      });
+
+      return updatedItems;
+
     });
 
-    return updatedItems;
-
-  });
-
-};
+  };
 
 
   // CONFIRM DELETION
@@ -142,7 +139,7 @@ export default function MenuScreen({ navigation }) {
   };
 
 
-  // AVERAGE
+  // COUNT ITEMS IN EACH COURSE
   const countCourseItems = (selectedCourse) => {
 
     const courseItems = menuList.filter(
@@ -202,30 +199,6 @@ export default function MenuScreen({ navigation }) {
   };
 
 
-  // AVERAGE CARD
-  const AverageCard = ({ title, courseName }) => {
-
-    return (
-      <View style={styles.averageCard}>
-
-        <Text style={styles.averageTitle}>
-          {title}
-        </Text>
-
-        <Text style={styles.averageAmount}>
-          {formatPrice(calculateAverage(courseName))}
-        </Text>
-
-        <Text>
-          {countCourseItems(courseName)} items available
-        </Text>
-
-      </View>
-    );
-
-  };
-
-
   // MAKES EACH CARD FUNCTION
   const renderMenuItem = ({ item }) => (
 
@@ -259,22 +232,20 @@ export default function MenuScreen({ navigation }) {
         <View style={styles.buttonContainer}>
 
           {/* EDIT BUTTON */}
-          <View style={styles.button}>
-            <Button
-              title="Edit"
-              color="black"
-              onPress={() => handleEdit(item)}
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => handleEdit(item)}
+          >
+            <Text style={styles.actionButtonText}>Edit</Text>
+          </TouchableOpacity>
 
           {/* DELETE BUTTON */}
-          <View style={styles.button}>
-            <Button
-              title="Delete"
-              color="red"
-              onPress={() => confirmDelete(item)}
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => confirmDelete(item)}
+          >
+            <Text style={styles.actionButtonText}>Delete</Text>
+          </TouchableOpacity>
 
         </View>
 
@@ -289,124 +260,194 @@ export default function MenuScreen({ navigation }) {
 
     <View style={styles.container}>
 
-      {/* HEADER */}
-      <View style={styles.header}>
-
-        <Image
-          source={require('./assets/profile.png')}
-          style={styles.profileImage}
-        />
-
-        <Image
-          source={require('./assets/logo.png')}
-          style={styles.logo}
-        />
-
-      </View>
-
-
-      {/* TITLE */}
-      <Text style={styles.heading}>
-        Menu ({menuList.length} items)
-      </Text>
-
-
-      {/* AVERAGE PRICES */}
-      <Text style={styles.heading}>
-        Average Starter Price: {formatPrice(calculateAverage('Starter Course'))}
-      </Text>
-
-      <Text style={styles.heading}>
-        Average Main Price: {formatPrice(calculateAverage('Main Course'))}
-      </Text>
-
-      <Text style={styles.heading}>
-        Average Dessert Price: {formatPrice(calculateAverage('Dessert Course'))}
-      </Text>
-
-      {/* OVERALL AVERAGE PRICE */}
-      <Text style={styles.heading}>
-        Overall Average Price: {formatPrice(calculateOverallAverage())}
-      </Text>
-
-
-      {/* SEARCH */}
-      <TextInput
-        style={styles.input}
-        placeholder="Search menu..."
-        value={searchQuery}
-        placeholderTextColor="gray"
-        onChangeText={setSearchQuery}
-      />
-
-
-      {/* COURSE FILTER BUTTONS */}
-      <View style={styles.filterContainer}>
-
-        <ItemsTypeButton title="All" />
-
-        <ItemsTypeButton title="Starter Course" />
-
-        <ItemsTypeButton title="Main Course" />
-
-        <ItemsTypeButton title="Dessert Course" />
-
-      </View>
-
-
-      {/* CLEAR SEARCH AND FILTER BUTTON */}
-      <TouchableOpacity
-        style={styles.clearButton}
-        onPress={clearSearchAndFilter}
-      >
-        <Text style={styles.clearButtonText}>
-          Clear Search and Filter
-        </Text>
-      </TouchableOpacity>
-
-
-      {/* FLATLIST */}
+      {/* FLATLIST - MAIN SCROLLING SECTION */}
       <FlatList
         data={sortedItems}
-        keyExtractor={(item, index) =>
-          item.id ? item.id.toString() : index.toString()
-        }
+        keyExtractor={(item) => item.id.toString()}
         renderItem={renderMenuItem}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+
+        // HEADER - EVERYTHING ABOVE THE MENU ITEMS
+        ListHeaderComponent={
+
+          <View>
+
+            {/* HEADER */}
+            <View style={styles.header}>
+
+              <Image
+                source={require('./assets/profile.png')}
+                style={styles.profileImage}
+              />
+
+              <Image
+                source={require('./assets/logo.png')}
+                style={styles.logo}
+              />
+
+            </View>
+
+
+            {/* TITLE */}
+            <Text style={styles.heading}>
+              Menu ({menuList.length} items)
+            </Text>
+
+
+            {/* AVERAGE STARTER PRICE */}
+            <View style={styles.averageCard}>
+
+              <Text style={styles.averageTitle}>
+                Average Starter Price
+              </Text>
+
+              <Text style={styles.averagePrice}>
+                {formatPrice(calculateAverage('Starter Course'))}
+              </Text>
+
+              <Text style={styles.courseCount}>
+                {countCourseItems('Starter Course')} items available
+              </Text>
+
+            </View>
+
+
+            {/* AVERAGE MAIN PRICE */}
+            <View style={styles.averageCard}>
+
+              <Text style={styles.averageTitle}>
+                Average Main Price
+              </Text>
+
+              <Text style={styles.averagePrice}>
+                {formatPrice(calculateAverage('Main Course'))}
+              </Text>
+
+              <Text style={styles.courseCount}>
+                {countCourseItems('Main Course')} items available
+              </Text>
+
+            </View>
+
+
+            {/* AVERAGE DESSERT PRICE */}
+            <View style={styles.averageCard}>
+
+              <Text style={styles.averageTitle}>
+                Average Dessert Price
+              </Text>
+
+              <Text style={styles.averagePrice}>
+                {formatPrice(calculateAverage('Dessert Course'))}
+              </Text>
+
+              <Text style={styles.courseCount}>
+                {countCourseItems('Dessert Course')} items available
+              </Text>
+
+            </View>
+
+
+            {/* OVERALL AVERAGE PRICE */}
+            <View style={styles.averageCard}>
+
+              <Text style={styles.averageTitle}>
+                Overall Average Price
+              </Text>
+
+              <Text style={styles.averagePrice}>
+                {formatPrice(calculateOverallAverage())}
+              </Text>
+
+            </View>
+
+
+            {/* SEARCH */}
+            <View style={styles.searchContainer}>
+
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search menu..."
+                value={searchQuery}
+                placeholderTextColor="gray"
+                onChangeText={setSearchQuery}
+              />
+
+            </View>
+
+
+            {/* COURSE FILTER BUTTONS */}
+            <View style={styles.filterContainer}>
+
+              <ItemsTypeButton title="All" />
+
+              <ItemsTypeButton title="Starter Course" />
+
+              <ItemsTypeButton title="Main Course" />
+
+              <ItemsTypeButton title="Dessert Course" />
+
+            </View>
+
+
+            {/* CLEAR SEARCH AND FILTER BUTTON */}
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={clearSearchAndFilter}
+            >
+              <Text style={styles.clearButtonText}>
+                Clear Search and Filter
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+
+        }
+
+
+        // SHOW MESSAGE WHEN NO ITEMS ARE FOUND
         ListEmptyComponent={
+
           <Text style={styles.emptyText}>
             No dishes match your search.
           </Text>
+
         }
+
+
+        // FOOTER - BUTTONS BELOW MENU ITEMS
+        ListFooterComponent={
+
+          <View style={styles.buttonContainer}>
+
+            {/* BACK BUTTON */}
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.actionButtonText}>
+                Back
+              </Text>
+            </TouchableOpacity>
+
+
+            {/* ADD BUTTON */}
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate('AddToMenu', {
+                itemToEdit: null
+              })}
+            >
+              <Text style={styles.actionButtonText}>
+                Add to Menu
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+
+        }
+
       />
-
-
-      {/* BUTTONS */}
-
-      {/* BACK BUTTON */}
-      <View style={styles.buttonContainer}>
-
-        <View style={styles.button}>
-          <Button
-            title="Back"
-            color="black"
-            onPress={() => navigation.goBack()}
-          />
-        </View>
-
-
-        {/* ADD BUTTON */}
-        <View style={styles.button}>
-          <Button
-            title="Add to Menu"
-            color="black"
-            onPress={() => navigation.navigate('AddToMenu', {
-              itemToEdit: null
-            })}
-          />
-        </View>
-
-      </View>
 
     </View>
 
@@ -450,13 +491,51 @@ const styles = StyleSheet.create({
     color: '#333'
   },
 
-  input: {
+  // AVERAGE CARD STYLES
+  averageCard: {
+    backgroundColor: 'white',
+    padding: 10,
+    marginBottom: 6,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'lightgray'
+  },
+
+  averageTitle: {
+    color: 'black',
+    fontSize: 15,
+    fontWeight: 'bold'
+  },
+
+  averagePrice: {
+    color: 'black',
+    fontSize: 17,
+    fontWeight: 'bold',
+    marginTop: 2
+  },
+
+  // COURSE COUNT STYLE
+  courseCount: {
+    color: 'gray',
+    fontSize: 13,
+    marginTop: 3
+  },
+
+  // SEARCH STYLES
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15
+  },
+
+  searchInput: {
+    flex: 1,
     borderWidth: 1,
     borderColor: 'gray',
     backgroundColor: 'white',
     padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
+    borderRadius: 20,
     color: 'black'
   },
 
@@ -469,17 +548,18 @@ const styles = StyleSheet.create({
   },
 
   itemTypeButton: {
-    backgroundColor: 'white',
+    backgroundColor: 'lightgray',
     padding: 10,
     margin: 4,
-    borderRadius: 8,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'gray'
   },
 
   selectedItemType: {
-    backgroundColor: 'green',
-    borderColor: 'green'
+    backgroundColor: 'white',
+    borderColor: 'black',
+    borderWidth: 2
   },
 
   itemTypeText: {
@@ -487,16 +567,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
 
-  selectedButtonText: {
-    color: 'white'
-  },
-
   menuItem: {
     flexDirection: 'row',
     backgroundColor: 'white',
     padding: 10,
     marginBottom: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center'
   },
 
@@ -504,7 +580,7 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     resizeMode: 'cover',
-    borderRadius: 8
+    borderRadius: 10
   },
 
   menuInfo: {
@@ -545,16 +621,57 @@ const styles = StyleSheet.create({
     marginTop: 10
   },
 
-  button: {
+  // EDIT BUTTON STYLE
+  editButton: {
     flex: 1,
-    margin: 5
+    backgroundColor: 'black',
+    padding: 10,
+    margin: 5,
+    borderRadius: 20,
+    alignItems: 'center'
+  },
+
+  // DELETE BUTTON STYLE
+  deleteButton: {
+    flex: 1,
+    backgroundColor: 'red',
+    padding: 10,
+    margin: 5,
+    borderRadius: 20,
+    alignItems: 'center'
+  },
+
+  // BACK BUTTON STYLE
+  backButton: {
+    flex: 1,
+    backgroundColor: 'black',
+    padding: 10,
+    margin: 5,
+    borderRadius: 20,
+    alignItems: 'center'
+  },
+
+  // ADD BUTTON STYLE
+  addButton: {
+    flex: 1,
+    backgroundColor: 'black',
+    padding: 10,
+    margin: 5,
+    borderRadius: 20,
+    alignItems: 'center'
+  },
+
+  actionButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center'
   },
 
   // CLEAR BUTTON STYLES
   clearButton: {
     backgroundColor: 'black',
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 20,
     alignItems: 'center',
     marginBottom: 10
   },
