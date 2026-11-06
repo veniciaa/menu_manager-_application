@@ -1,3 +1,4 @@
+
 import React, { useState, useContext, useEffect } from 'react'; //useEffect Allows us to load exsisteing items to form
 import { 
   StyleSheet, 
@@ -33,7 +34,7 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
     }
   }, [itemToEdit]);
 
-  // Add new menu item  or edit exsisting menu item
+  // Add new menu item or edit exsisting menu item
   const handleAddItem = () => {
 
     //checks if required fields are empty
@@ -41,8 +42,16 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
       Alert.alert("Error", "Please complete all required fields.");
       return;
     }
+
+    //Checks if price is a valid number
+    const itemPrice = Number(price);
+
+    if (!Number.isFinite(itemPrice) || itemPrice <= 0) {
+      Alert.alert("Invalid Price", "Please enter a valid price above zero.");
+      return;
+    }
     
-    //Checks if user is editing and exsisting dish
+    //Checks if user is editing an exsisting dish
     if (itemToEdit) {
 
       const updatedItem = {
@@ -51,7 +60,7 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
         description: description.trim(),
         course: course,
         price: price.trim()
-      }
+      };
 
       //edit the exsisting dish in the menuList state variable
       setMenuList((currentItems) => 
@@ -59,7 +68,7 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
           item.id === itemToEdit.id ? updatedItem : item)
       );
 
-      //To show menu item was successfiully edited and return to the MenuScreen
+      //To show menu item was successfully edited and return to the MenuScreen
       Alert.alert('Successful', `${dish} updated in Menu!`, [
         { 
           text: 'OK', 
@@ -70,27 +79,29 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
     } else {
 
       //Adding new dish item to the menuList 
-    const newItem = {
-      id: Date.now().toString(),
-      dish: dish.trim(),
-      description: description.trim(),
-      course: course, 
-      price: price.trim(),
-      image: null
-    };
+      const newItem = {
+        id: Date.now().toString(),
+        dish: dish.trim(),
+        description: description.trim(),
+        course: course, 
+        price: price.trim(),
+        image: null
+      };
 
-    // add item to the menuList
-    setMenuList([...menuList, newItem]); //using ... which is a spread operator and it is passing through the route parameters to the newItem object, which is then added to the menuList state variable.
+      // add item to the menuList
+      setMenuList((currentItems) => [
+        ...currentItems,
+        newItem
+      ]);
 
-    //To show menu item was successfiully added and return to the MenuScreen
+      //To show menu item was successfully added and return to the MenuScreen
+      Alert.alert("Success", `${dish} added to Menu!`, [
+        { text: "OK", onPress: () => navigation.navigate('Menu') }
+      ]);
+
+    }
     
-    Alert.alert("Success", `${dish} added to Menu!`, [
-      { text: "OK", onPress: () => navigation.navigate('Menu') }
-    ]);
-
-  }
-    
-  //clear all the fields after adding or editing a dish
+    //clear all the fields after adding or editing a dish
     handleClear();
   };
 
@@ -107,7 +118,7 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
     <View style={styles.container}>
       <FlatList
         data={menuList}
-        keyExtractor={(item) => item.id.toString()} //changed to this line of code becuse it goves every item a unique key based on its id, which is important for performance and avoiding warnings in React Native.
+        keyExtractor={(item) => item.id.toString()} //changed to this line of code because it gives every item a unique key based on its id, which is important for performance and avoiding warnings in React Native.
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
@@ -172,18 +183,18 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
               
               <View style={styles.button}>
                 <Button
-                 title="Clear" 
-                 color="black" 
-                 onPress={handleClear} 
-                 />
+                  title="Clear" 
+                  color="black" 
+                  onPress={handleClear} 
+                />
               </View>
 
               <View style={styles.button}>
                 <Button
-                 title={itemToEdit ? 'Save Changes' : 'Add Item'} //this allows button to change text depending on if user is adding or editing a dish
-                 color="black" 
-                 onPress={handleAddItem} 
-                 />
+                  title={itemToEdit ? 'Save Changes' : 'Add Item'} //this allows button to change text depending on if user is adding or editing a dish
+                  color="black" 
+                  onPress={handleAddItem} 
+                />
               </View>
 
             </View>
@@ -191,10 +202,10 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
             {/* Back button */}
             <View style={styles.backButton}>
               <Button
-               title="Back" 
-               color="black" 
-               onPress={() => navigation.goBack()} 
-               />
+                title="Back" 
+                color="black" 
+                onPress={() => navigation.goBack()} 
+              />
             </View>
 
             {menuList && menuList.length > 0 && (
@@ -211,21 +222,21 @@ export default function AddToMenuScreen({ navigation, route }) { //route is to a
             </Text>
 
             <Text style={styles.cardSub}>
-              {item?.course || 'Unassigned Course'} — R{item?.price || '0.00'}
+              {item?.course || 'Unassigned Course'} — R
+              {Number(item?.price || 0).toFixed(2)}
             </Text>
 
             {item?.description ? 
-            <Text style={styles.cardDesc}>
-              {item.description}
+              <Text style={styles.cardDesc}>
+                {item.description}
               </Text> : null}
-          
           
             <Button //adds edit button for the preview section of the add to menu screen 
               title="Edit" 
               color="black" 
               onPress={() => navigation.navigate('AddToMenu', {
-          itemToEdit: item} )
-              }
+                itemToEdit: item
+              })}
             />
 
           </View>
@@ -332,6 +343,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic'
   }
 });
+
 
 /*REFERENCES
 

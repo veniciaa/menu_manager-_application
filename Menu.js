@@ -1,3 +1,4 @@
+
 import React, { useContext, useState } from 'react';
 
 import {
@@ -24,6 +25,15 @@ export default function MenuScreen({ navigation }) {
 
   // FILTERING
   const [filter, setFilter] = useState('All');
+
+
+  // CLEAR SEARCH AND FILTER
+  const clearSearchAndFilter = () => {
+
+    setSearchQuery('');
+    setFilter('All');
+
+  };
 
 
   // FILTER ITEMS BY COURSE
@@ -56,7 +66,7 @@ export default function MenuScreen({ navigation }) {
   // SORT ITEMS (LOWEST TO HIGHEST)
   const sortedItems = [...filteredMenu].sort(
     (firstItem, secondItem) =>
-      firstItem.price - secondItem.price
+      Number(firstItem.price) - Number(secondItem.price)
   );
 
 
@@ -96,12 +106,17 @@ export default function MenuScreen({ navigation }) {
   // DELETE
   // itemId is used to identify each dish and filter it out of the menuList state variable when the delete button is pressed
   const deleteItem = (id) => {
+  setMenuList((currentItems) => {
 
-    setMenuList((currentItems) =>
-      currentItems.filter((item) => item.id !== id)
-    );
+    const updatedItems = currentItems.filter((item) => {
+      return item.id.toString() !== id.toString();
+    });
 
-  };
+    return updatedItems;
+
+  });
+
+};
 
 
   // CONFIRM DELETION
@@ -128,22 +143,50 @@ export default function MenuScreen({ navigation }) {
 
 
   // AVERAGE
-  const calculateAverage = (selectedCourse) => {
+  const countCourseItems = (selectedCourse) => {
 
     const courseItems = menuList.filter(
       (item) => item.course === selectedCourse
     );
 
+    return courseItems.length;
+
+  };
+
+
+  // CALCULATE AVERAGE PRICE PER COURSE
+  const calculateAverage = (selectedCourse) => {
+
+    const courseItems = menuList.filter((item) => {
+      return item.course === selectedCourse;
+    });
+
     if (courseItems.length === 0) {
       return 0;
     }
 
-    const total = courseItems.reduce(
+    const total = courseItems.reduce((sum, item) => {
+      return sum + Number(item.price);
+    }, 0);
+
+    return total / courseItems.length;
+
+  };
+
+
+  // CALCULATE OVERALL AVERAGE PRICE
+  const calculateOverallAverage = () => {
+
+    if (menuList.length === 0) {
+      return 0;
+    }
+
+    const total = menuList.reduce(
       (sum, item) => sum + Number(item.price),
       0
     );
 
-    return total / courseItems.length;
+    return total / menuList.length;
 
   };
 
@@ -158,14 +201,28 @@ export default function MenuScreen({ navigation }) {
 
   };
 
-  //AVERAGE CARD 
+
+  // AVERAGE CARD
   const AverageCard = ({ title, courseName }) => {
+
     return (
       <View style={styles.averageCard}>
-        <Text style={styles.averageTitle}>{title}</Text>
-        <Text style={styles.averageAmount}>{formatPrice(calculateAverage(courseName))}</Text>
+
+        <Text style={styles.averageTitle}>
+          {title}
+        </Text>
+
+        <Text style={styles.averageAmount}>
+          {formatPrice(calculateAverage(courseName))}
+        </Text>
+
+        <Text>
+          {countCourseItems(courseName)} items available
+        </Text>
+
       </View>
     );
+
   };
 
 
@@ -250,7 +307,7 @@ export default function MenuScreen({ navigation }) {
 
       {/* TITLE */}
       <Text style={styles.heading}>
-        Menu ({sortedItems.length} items)
+        Menu ({menuList.length} items)
       </Text>
 
 
@@ -265,6 +322,11 @@ export default function MenuScreen({ navigation }) {
 
       <Text style={styles.heading}>
         Average Dessert Price: {formatPrice(calculateAverage('Dessert Course'))}
+      </Text>
+
+      {/* OVERALL AVERAGE PRICE */}
+      <Text style={styles.heading}>
+        Overall Average Price: {formatPrice(calculateOverallAverage())}
       </Text>
 
 
@@ -290,6 +352,17 @@ export default function MenuScreen({ navigation }) {
         <ItemsTypeButton title="Dessert Course" />
 
       </View>
+
+
+      {/* CLEAR SEARCH AND FILTER BUTTON */}
+      <TouchableOpacity
+        style={styles.clearButton}
+        onPress={clearSearchAndFilter}
+      >
+        <Text style={styles.clearButtonText}>
+          Clear Search and Filter
+        </Text>
+      </TouchableOpacity>
 
 
       {/* FLATLIST */}
@@ -339,7 +412,7 @@ export default function MenuScreen({ navigation }) {
 
   );
 
-  }
+}
 
 
 const styles = StyleSheet.create({
@@ -475,34 +548,66 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     margin: 5
-  }
+  },
+
+  // CLEAR BUTTON STYLES
+  clearButton: {
+    backgroundColor: 'black',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10
+  },
+
+  clearButtonText: {
+    color: 'white',
+    fontWeight: 'bold'
+  },
 
 });
 
 
 /* REFERENCES
 
-W3Schools. 2026. React useContext Hook [Online]. Available: w3schools.com [Accessed 8 September 2026]
+W3Schools (2026) React useContext Hook. Available at:
+https://www.w3schools.com/react/react_usecontext.asp
+(Accessed: 8 September 2026).
 
-Robinson, S. 2026. How to Align Images in React Native [Blog]. Available: https://stackabuse.com/how-to-align-images-in-react-native/ [Accessed 2 September 2026].
+Robinson, S. (2026) How to Align Images in React Native. StackAbuse. Available at:
+https://stackabuse.com/how-to-align-images-in-react-native/
+(Accessed: 2 September 2026).
 
-GeeksforGeeks, 2026. Adding a SearchBar in React Native. [online] GeeksforGeeks. Available at: https://www.geeksforgeeks.org/react-native/how-to-add-searchbar-in-react-native/ [Accessed 8 September 2026].
+GeeksforGeeks (2026) Adding a SearchBar in React Native. Available at:
+https://www.geeksforgeeks.org/react-native/how-to-add-searchbar-in-react-native/
+(Accessed: 8 September 2026).
 
-Stack Overflow, 2017. Search Filter with React Native on FlatList. Available at: https://stackoverflow.com/questions/45666762/search-filter-with-react-native-on-flatlist (Accessed: 8 September 2026)
+Stack Overflow (2017) Search Filter with React Native on FlatList. Available at:
+https://stackoverflow.com/questions/45666762/search-filter-with-react-native-on-flatlist
+(Accessed: 8 September 2026).
 
-Şahin, D., 2023. 'Build Powerful Search, Filter & Sort Implementation in React Native', Medium [Blog], 30 October. Available at: https://medium.com/@didemsahin1789/build-powerful-search-filter-sort-implementation-in-react-native-ad1156e2ccd4 (Accessed: 8 September 2026).
+Şahin, D. (2025) Build Powerful Search: Filter & Sort Implementation in React Native. Medium. Available at:
+https://medium.com/@didemsahin1789/build-powerful-search-filter-sort-implementation-in-react-native-ad1156e2ccd4
+(Accessed: 8 September 2026).
 
-Meta Platforms, Inc., 2026. FlatList · React Native. Available at: https://reactnative.dev/docs/flatlist (Accessed: 7 September 2026).
+Meta Platforms (2026) FlatList. React Native Documentation. Available at:
+https://reactnative.dev/docs/flatlist
+(Accessed: 7 September 2026).
 
-Developer Express Inc., 2026. React Menu - items | React Documentation v26.1. Available at: https://js.devexpress.com/React/Documentation/ApiReference/UI_Components/dxMenu/Configuration/items/ (Accessed: 7 September 2026).
+Developer Express (2026) React Menu Items.
+(Accessed: 7 September 2026).
 
-Stack Overflow, 2022. URL path with image variable in image source URI React Native. Available at: https://stackoverflow.com/questions/71049092/url-path-with-image-variable-in-image-source-uri-react-native (Accessed: 7 September 2026).
+Stack Overflow (2022) Image URI in React Native.
+(Accessed: 7 September 2026).
 
+Stack Overflow (2026) FlatList Default Data.
+(Accessed: 8 September 2026).
 
-Stack Overflow, 2017. React Native Flatlist default data name. Available at: https://stackoverflow.com/questions/46618821/react-native-flatlist-default-data-name (Accessed: 8 September 2026).
+GeeksforGeeks (2026) FlatList in React Native. Available at:
+https://www.geeksforgeeks.org/react-native/react-native-flatlist/
+(Accessed: 6 September 2026).
 
-GeeksforGeeks. 2026. React Native FlatList Component [Blog]. Available: https://www.geeksforgeeks.org/react-native/react-native-flatlist-component/ [Accessed 6 September 2026].
-
-W3Schools. 2026. React useContext Hook [Online]. Available: w3schools.com [Accessed 7 September 2026].
+W3Schools (2026) React useContext Hook. Available at:
+https://www.w3schools.com/react/react_usecontext.asp
+(Accessed: 7 September 2026).
 
 */
